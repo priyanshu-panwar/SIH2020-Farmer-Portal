@@ -11,9 +11,15 @@ class Profile(models.Model):
     bankName = models.ForeignKey('Bank', on_delete=models.CASCADE, blank=True, null=True)
     accNo = models.CharField(max_length=20, blank=True, null=True)
     ifscNo = models.CharField(max_length=20, blank=True, null=True)
-    
+    cat = models.ForeignKey('Category', on_delete=models.CASCADE, blank=True, null=True)
+
     def __str__(self):
         return f'{self.user.username} Profile'
+
+class Category(models.Model):
+    name = models.CharField(max_length=50)
+    def __str__(self):
+        return self.name
 
 class Bank(models.Model):
     name = models.CharField(max_length=100)

@@ -35,8 +35,6 @@ INSTALLED_APPS = [
     'users',
     'crispy_forms',
     'crop',
-    'transactions',
-    'buyer',
 
     'django.contrib.admin',
     'django.contrib.auth',

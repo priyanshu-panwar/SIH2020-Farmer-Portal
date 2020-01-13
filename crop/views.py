@@ -9,12 +9,13 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Crop, Category, Types
-from .forms import CropForm
+from .forms import CropForm, BidForm
 from django.urls import reverse, reverse_lazy
 from django import forms
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 import datetime
+from django.utils import timezone
 
 @login_required
 def post_create(request):
@@ -61,9 +62,39 @@ def post_delete(request, pk):
     crop.delete()
     return redirect('crop:home')
 
-def post_detail(request, pk):
+def buy(request, pk):
     object = get_object_or_404(Post, pk=pk)
-    return render(request, 'crop/post_detail.html', {'object': object, })
+    object.owner = request.user
+    object.save()
+    return redirect('core:post-detail', pk) 
+
+def post_detail(request, pk):
+    object = get_object_or_404(Crop, pk=pk)
+    now = timezone.now()
+    bids = Crop.objects.all()
+    bids = bids.filter(stuff=object)
+    highest = (None,None)
+    if bids:
+        high = {}
+        for i in bids:
+            high[int(i.value)]=i.author
+        sorted_d = sorted(high.items(), key=operator.itemgetter(0),reverse=True)
+        highest = sorted_d[0]
+    form = BidForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        instance = form.save(commit=False)
+        instance.author = request.user
+        instance.stuff = object
+        instance.save()
+        form.save_m2m()
+        return redirect('crop:post-detail', pk)
+    context = {
+        "form": form,
+        "now": now,
+        "object": object,
+        "highest": highest[0],
+        "bidder": str(highest[1]),
+        }
 
 def home(request):
     posts = Crop.objects.all()
